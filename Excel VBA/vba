@@ -1,0 +1,112 @@
+Sub Stocks()
+'apply the sub to all worksheets
+Dim w As Worksheet
+For Each ws In Sheets
+    ws.Activate
+' set initial dimensions
+    Dim ticker As String
+    Dim stock_volume As Double
+        stock_volume = 0
+    Dim yearlychange As Double
+    Dim percentchange As Double
+    Dim counter As Double
+        counter = 0
+  'set a last row variable for the main dataset
+    Dim lastrow As Double
+        lastrow = Cells(Rows.Count, "A").End(xlUp).Row
+  ' Keep track of the ticker stock name
+    Dim summary_tablepos_row As Double
+        summary_tablepos_row = 2
+  ' loop through stocks
+    For i = 2 To lastrow
+    ' identify a difference in column "A" after row 2
+        If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+        ' Set the ticker name & add volume
+            ticker = Cells(i, 1).Value
+            stock_volume = stock_volume + Cells(i, 7).Value
+    'Define the starting ticker value
+            Dim counter2 As Double
+                counter2 = 0
+            Dim st_tkr As Double
+            If Cells(i - counter, 3).Value <> 0 Then
+                st_tkr = i - counter
+                counter2 = 0
+             ElseIf Cells(i - counter, 3).Value = 0 Then
+                 counter2 = counter2 + 1
+            ElseIf Cells(i - counter, 3).Value = 0 And Cells(i - counter + 1, 3).Value Then
+                counter2 = counter2 + 1
+                st_tkr = i - counter2
+            End If
+        'calc yearlychange
+            yearlychange = Cells(i, 6).Value - Cells(st_tkr, 3).Value
+        'calc percentage change
+                'MsgBox (Cells(i, 6).Value)
+   
+                    percentchange = yearlychange / Cells(st_tkr, 3).Value
+      'print headers & summary table
+            Range("I1").Value = "Ticker"
+            Range("J1").Value = "Yearly Change"
+            Range("K1").Value = "Percent Change"
+            Range("L1").Value = "Total Stock Volume"
+            Range("I" & summary_tablepos_row).Value = ticker
+            Range("L" & summary_tablepos_row).Value = stock_volume
+            Range("J" & summary_tablepos_row).Value = yearlychange
+            Range("K" & summary_tablepos_row).Value = percentchange
+      ' Add one to the summary table row
+             summary_tablepos_row = summary_tablepos_row + 1
+      ' Reset the stock volume
+            stock_volume = 0
+      ' Reset yearlychange(should go to 0 when)
+            yearlychange = 0
+            counter = 0
+        Else
+    ' keep adding stock volume
+           stock_volume = stock_volume + Cells(i, 7).Value
+            counter = counter + 1
+          
+        End If
+    Next i
+'=====Color Splash========
+'set a lastrow variable for the summary dataset
+        Dim lastrow2 As Double
+        lastrow2 = Cells(Rows.Count, "I").End(xlUp).Row
+    'splash a little color
+        For C = 2 To lastrow2
+            If Cells(C, 11).Value >= 0 Then
+                Cells(C, 11).Interior.ColorIndex = 4
+            ElseIf Cells(C, 11).Value < 0 Then
+                Cells(C, 11).Interior.ColorIndex = 3
+            End If
+        Next C
+ 
+'======MinMax Loop & Summary========
+    Dim vMin As Double
+    Dim vMax As Double
+    Dim vMax2 As Double
+        vMin = Application.WorksheetFunction.Min(Columns("K"))
+        vMax = Application.WorksheetFunction.Max(Columns("K"))
+        vMax2 = Application.WorksheetFunction.Max(Columns("L"))
+    For S = 2 To lastrow2
+        If Cells(S, 11).Value = vMax Then
+            Cells(2, 16).Value = Cells(S, 9).Value
+            Cells(2, 17).Value = Cells(S, 11).Value 
+        ElseIf Cells(S, 11).Value = vMin Then
+            Cells(3, 16).Value = Cells(S, 9).Value
+            Cells(3, 17).Value = Cells(S, 11).Value
+        ElseIf Cells(S, 12).Value = vMax2 Then
+            Cells(4, 16).Value = Cells(S, 9).Value
+            Cells(4, 17).Value = Cells(S, 12).Value
+         End If
+    Next S
+'======Percents - Labels and Percent Formatting========
+    Range("O2").Value = "Greatest % Increase"
+    Range("O3").Value = "Greatest % Decrease"
+    Range("O4").Value = "Greatest Total Volume"
+    Range("P1").Value = "Ticker"
+    Range("Q1").Value = "Value"
+ 
+    Range("Q3").NumberFormat = "0.00%"
+    Range("Q5").NumberFormat = "0.00%"
+    Columns("K").NumberFormat = "0.00%"
+  Next ws
+End Sub
